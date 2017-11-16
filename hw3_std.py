@@ -107,8 +107,53 @@ def unify(x,y):
 			#print(subs)
 
 		else:
-			return None
+			
+			if x.args[i]!= y.args[i]:
+				return None
+
+			
+			if x.args[i] not in subs and y.args[i] not in subs:
+				subs[x.args[i]]= y.args[i]
+
+			elif x.args[i] in subs and y.args[i] not in subs:
+				if subs[x.args[i]]!= y.args[i]:
+					return None
+
+			elif x.args[i] not in subs and y.args[i] in subs:
+				if subs[y.args[i]]!= x.args[i]:
+					return None
+			else:
+				return None
+			
+
+
 	return subs
+
+
+def Unify(x, y, subst = {}):
+    if subst is None:
+        return None
+
+    elif x == y:
+        return subst
+
+    elif isVariable(x):
+        return Unify_Var(x, y, subst)
+
+    elif isVariable(y):
+        return Unify_Var(y, x, subst)
+
+    else:
+        return None
+
+
+def Unify_Var(var, x, subst):
+    if var in subst:
+        return Unify(subst[var], x, subst)
+
+    newSubst = subst.copy()
+    newSubst[var] = x
+    return newSubst
 
 
 
@@ -121,6 +166,14 @@ def parse(sen):
 	sen= sen.replace('~', ' ~ ')
 	return sen
 
+
+
+def standardize_apart(sen2):
+	for clause in sen2:
+		for arg_ind in range(len(clause.args)):
+			if isVariable(clause.args[arg_ind]):
+				clause.args[arg_ind]=clause.args[arg_ind]+"1"
+		
 
 
 
@@ -141,90 +194,102 @@ def resolution(kb1, alpha):
 				outerClause=None
 				for clause1 in kb.sentences[keys[pred][i]]:
 					if clause1.pred==pred:
-						outerClause= clause1	
-				for j in range(i+1,arg_size):
+						outerClause= clause1
+					else:
+						continue
 
-					innerClause= None
-					for clause2 in kb.sentences[keys[pred][j]]:
-						if clause2.pred==pred and clause2.isComp(outerClause):
-							innerClause=  clause2
+					for j in range(i+1,arg_size):
 
-					if outerClause and innerClause:
-						temp_sen1= deepcopy(kb.sentences[keys[pred][i]])
+						innerClause= None
 						temp_sen2= deepcopy(kb.sentences[keys[pred][j]])
-						#standardize(temp_sen1, temp_sen2)
-						subs = unify(outerClause,innerClause)
-						
-						if subs==None:
-							continue
-						
-						'''
-						for clause in temp_sen1:
-							if clause.pred==pred:
-								temp_sen1.remove(clause)
-								break
-
-		
-						
-						for clause in temp_sen2:
-							if clause.pred==pred:
-								temp_sen2.remove(clause)
-								break
-						'''
-
-						temp_sen1.remove(outerClause)
-						temp_sen2.remove(innerClause)
-						clause_list = temp_sen1+temp_sen2
-						
-						#print("Temporary clause list: ")
-						#print(clause_list)
-						notUnified = False
-
-						for clause in clause_list:
-							for ind in range(len(clause.args)):
-								#Adde
-								if not isVariable(clause.args[ind]):
-									continue
-								#EAdde
-								if clause.args[ind] in subs:
-									clause.args[ind]= subs[clause.args[ind]]
-								'''
-								else:
-									notUnified=True
-									break
-								'''
-
-								#Added sentences
-								
-
-
-						if clause_list in kb.sentences or notUnified:
-							continue
-
-						if clause_list==[]:
-							#print(innerClause)
-							#print(outerClause)
-							print("Final answer")
-							kb.printSentences()
-							#input()
-							print(len(kb.sentences))
-							#print(innerClause)
-							#print(outerClause)
-							#print()
-							return True
-						else:
 							
-							#print(kb.sentences[keys[pred][i]])
-							#print(kb.sentences[keys[pred][j]])
-							#print("Inner Clause", innerClause)
-							#print("Outer Clause", outerClause)
+						for clause2 in temp_sen2:
+							if clause2.pred==pred and clause2.isComp(outerClause):
+								innerClause=  clause2
+
+						if outerClause and innerClause:
+							temp_sen1= deepcopy(kb.sentences[keys[pred][i]])
+							standardize_apart(temp_sen2)
+							#print("Temporary sentence: ")
+							#print(temp_sen2)
+							#print("Inner clause: ")
+							#print(innerClause)
+							#print("Outer Clause: ")
+							#print(outerClause)
+							#standardize(temp_sen1, temp_sen2)
+							subs = unify(outerClause,innerClause)
 							#print(subs)
-							#print(clause_list)
-							#print("****")
-							#input()
+							if subs==None:
+								continue
 							
-							#print("****")
-							newsentences.append(clause_list)
+							'''
+							for clause in temp_sen1:
+								if clause.pred==pred:
+									temp_sen1.remove(clause)
+									break
+
+			
+							
+							for clause in temp_sen2:
+								if clause.pred==pred:
+									temp_sen2.remove(clause)
+									break
+							'''
+
+							temp_sen1.remove(outerClause)
+							temp_sen2.remove(innerClause)
+							clause_list = temp_sen1+temp_sen2
+							
+							notUnified = False
+
+							for clause in clause_list:
+								for ind in range(len(clause.args)):
+									#Adde
+									if not isVariable(clause.args[ind]):
+										continue
+									#EAdde
+									if clause.args[ind] in subs:
+										clause.args[ind]= subs[clause.args[ind]]
+									'''
+									else:
+										notUnified=True
+										break
+									'''
+
+									#Added sentences
+									
+
+							#print("Temporary clause list: ")
+							#print(clause_list)
+							#factor(clause_list)
+							
+							if clause_list in kb.sentences:
+								continue
+
+							if clause_list==[]:
+								#print(innerClause)
+								#print(outerClause)
+								print("Final answer")
+								kb.printSentences()
+								#input()
+								print(len(kb.sentences))
+								#print(innerClause)
+								#print(outerClause)
+								#print()
+								return True
+							else:
+								
+								#print(kb.sentences[keys[pred][i]])
+								#print(kb.sentences[keys[pred][j]])
+								#print("Inner Clause", innerClause)
+								#print("Outer Clause", outerClause)
+								#print(subs)
+								#print(clause_list)
+								#print("****")
+								#input()
+								
+								#print("****")
+								newsentences.append(clause_list)
 
 		if newsentences==[]:
 			#print("FALSE")
@@ -265,7 +330,7 @@ if __name__=='__main__':
 	sentences=[]
 
 	f1 = open("output.txt", "w")
-	with open("inp1.txt") as f:
+	with open("inp5.txt") as f:
 		content = f.readlines()
 		#print(content)
 
