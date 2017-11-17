@@ -107,23 +107,36 @@ def unify(x,y):
 			#print(subs)
 
 		else:
-			
+			'''
 			if x.args[i]!= y.args[i]:
 				return None
-
+			'''
 			
+			# Eg:- x and x1 : {x1: x}
 			if x.args[i] not in subs and y.args[i] not in subs:
-				subs[x.args[i]]= y.args[i]
+				subs[y.args[i]]= x.args[i]
+
+			# Eg:- {x:"John"} and x1 -  {x:"John", x1: "John"}
 
 			elif x.args[i] in subs and y.args[i] not in subs:
-				if subs[x.args[i]]!= y.args[i]:
-					return None
 
-			elif x.args[i] not in subs and y.args[i] in subs:
-				if subs[y.args[i]]!= x.args[i]:
+				subs[y.args[i]] = subs[x.args[i]]
+
+				'''
+				if subs[y.args[i]] != subs[x.args[i]]:
 					return None
+				'''
+
+			# Eg:- x and {x1:"John"} - {x:"John", x1:"John"}   or  x and {x1: "x"} - do nothing
+			elif x.args[i] not in subs and y.args[i] in subs:
+				if isVariable(subs[y.args[i]]) and subs[y.args[i]]!= x.args[i]:
+					return None
+				else:
+					subs[x.args[i]] = subs[y.args[i]]
+
 			else:
-				return None
+				if subs[x.args[i]]!= subs[y.args[i]]:
+					return None
 			
 
 
@@ -172,9 +185,38 @@ def standardize_apart(sen2):
 	for clause in sen2:
 		for arg_ind in range(len(clause.args)):
 			if isVariable(clause.args[arg_ind]):
-				clause.args[arg_ind]=clause.args[arg_ind]+"1"
+				clause.args[arg_ind]=clause.args[arg_ind]+"_1"
 		
 
+
+def factor(clause_list):
+	
+	posPred= dict()
+	for ind in range(len(clause_list)):
+		print("A")
+		clause = clause_list[ind]
+		if clause.neg==0:
+			continue
+		if clause.pred in posPred:
+			posPred[clause.pred].append(ind)
+		else:
+			posPred[clause.pred]=[ind]
+	print("Clause list: ")
+	print(clause_list)
+	print("Dictionary: ")
+	print(posPred)
+	input()
+	for j in posPred:
+		if len(posPred[j])==1:
+			continue
+		else:
+			print(posPred[j][0], posPred[j][1])
+			subs = unify(clause_list[posPred[j][0]], clause_list[posPred[j][1]])
+			if subs==None:
+				return False
+
+
+	return True
 
 
 
@@ -192,6 +234,7 @@ def resolution(kb1, alpha):
 			# generating combinations which can unify and can be added to the KB.
 			for i in range(arg_size-1):
 				outerClause=None
+				#factor(temp_sen1)
 				for clause1 in kb.sentences[keys[pred][i]]:
 					if clause1.pred==pred:
 						outerClause= clause1
@@ -202,14 +245,17 @@ def resolution(kb1, alpha):
 
 						innerClause= None
 						temp_sen2= deepcopy(kb.sentences[keys[pred][j]])
+
+
 							
 						for clause2 in temp_sen2:
 							if clause2.pred==pred and clause2.isComp(outerClause):
 								innerClause=  clause2
 
 						if outerClause and innerClause:
-							temp_sen1= deepcopy(kb.sentences[keys[pred][i]])
 							standardize_apart(temp_sen2)
+							temp_sen1= deepcopy(kb.sentences[keys[pred][i]])
+							#factor(temp_sen1)
 							#print("Temporary sentence: ")
 							#print(temp_sen2)
 							#print("Inner clause: ")
@@ -218,9 +264,12 @@ def resolution(kb1, alpha):
 							#print(outerClause)
 							#standardize(temp_sen1, temp_sen2)
 							subs = unify(outerClause,innerClause)
-							#print(subs)
+							
 							if subs==None:
 								continue
+							print(temp_sen1)
+							print(temp_sen2)
+							print(subs)
 							
 							'''
 							for clause in temp_sen1:
@@ -257,15 +306,28 @@ def resolution(kb1, alpha):
 									'''
 
 									#Added sentences
-									
-
+							
+							#print("Clauses: ")
+							for clause in clause_list:
+								#print("Arguments: ")
+								for ind in range(len(clause.args)):
+									if clause.args[ind].find("_1")!= -1:
+										clause.args[ind]=clause.args[ind].replace("_1","")
+										#print("New arg: ",arg)
 							#print("Temporary clause list: ")
-							#print(clause_list)
+							print(clause_list)
+							#print(factor(clause_list))
+							print("********")
 							#factor(clause_list)
+							
+
 							
 							if clause_list in kb.sentences:
 								continue
 
+							
+							
+							
 							if clause_list==[]:
 								#print(innerClause)
 								#print(outerClause)
