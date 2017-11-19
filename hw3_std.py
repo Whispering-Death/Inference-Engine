@@ -1,6 +1,6 @@
 
 from copy import deepcopy
-import time
+from time import time
 class KB:
 
 	def __init__(self):
@@ -11,7 +11,6 @@ class KB:
 		self.sentences.append(clauseList)
 
 		predicates = list(set(clause.pred for clause in clauseList))
-		#print(predicates)
 		for pred in predicates:
 			if pred not in self.keyList:
 				self.keyList[pred]=[]
@@ -78,10 +77,10 @@ def isVariable(x):
 def unify(x,y):
 
 	if x.pred!= y.pred:
-		print("Predicates don't match")
+		#print("Predicates don't match")
 		return None
 	if len(x.args) != len(y.args):
-		print("Argument lists are of different length")
+		#print("Argument lists are of different length")
 		return None
 
 	subs= {}
@@ -115,7 +114,10 @@ def unify(x,y):
 			
 			# Eg:- x and x1 : {x1: x}
 			if x.args[i] not in subs and y.args[i] not in subs:
-				subs[y.args[i]]= x.args[i]
+				if x.args[i]== y.args[i]:
+					continue
+				else:
+					subs[y.args[i]]= x.args[i]
 
 			# Eg:- {x:"John"} and x1 -  {x:"John", x1: "John"}
 
@@ -143,35 +145,6 @@ def unify(x,y):
 
 	return subs
 
-
-def Unify(x, y, subst = {}):
-    if subst is None:
-        return None
-
-    elif x == y:
-        return subst
-
-    elif isVariable(x):
-        return Unify_Var(x, y, subst)
-
-    elif isVariable(y):
-        return Unify_Var(y, x, subst)
-
-    else:
-        return None
-
-
-def Unify_Var(var, x, subst):
-    if var in subst:
-        return Unify(subst[var], x, subst)
-
-    newSubst = subst.copy()
-    newSubst[var] = x
-    return newSubst
-
-
-
-
 def parse(sen):
 	sen= sen.replace('(',' ( ')
 	sen= sen.replace(')',' ) ')
@@ -192,7 +165,6 @@ def standardize_apart(sen2):
 
 def factor(sen):
 	duplicates=set()
-	#print(len(sen))
 	vis=[0]*len(sen)
 	for i in range(len(sen)):
 		for j in range(i+1, len(sen)):
@@ -205,38 +177,30 @@ def factor(sen):
 
 			clause1 = sen[i]
 			clause2 = sen[j]
-
 			if clause1.pred!= clause2.pred or clause1.isComp(clause2) or len(clause1.args)!= len(clause2.args):
 				continue
 
 			isUnifiable = True
 
 			subs= unify(clause1, clause2)
-
-			#print(subs)
 			if subs!= None:
 				vis[j]=1
 				
 				for ind in range(len(clause2.args)):
-					#Adde
+					
 					if not isVariable(clause2.args[ind]):
 						continue
-					#EAdde
+					
 					if clause2.args[ind] in subs:
 						clause2.args[ind]= subs[clause2.args[ind]]
 
 				for ind in range(len(clause1.args)):
-					#Adde
+					
 					if not isVariable(clause1.args[ind]):
 						continue
-					#EAdde
+					
 					if clause1.args[ind] in subs:
 						clause1.args[ind]= subs[clause1.args[ind]]
-				
-
-			#print(clause1)
-			#print(clause2)
-
 
 	sen=list(set(sen))
 	return sen
@@ -250,6 +214,8 @@ def resolution(kb1, alpha):
 	kb= deepcopy(kb1)
 
 	kb.add(alpha)
+	prev_cnt=0
+	start=time()
 	while True:
 
 		newsentences = []
@@ -268,7 +234,12 @@ def resolution(kb1, alpha):
 						continue
 
 					for j in range(i+1,arg_size):
-
+						end = time()
+						time_elapsed = end-start
+						if time_elapsed> 15:
+							return False
+						if keys[pred][i]< prev_cnt and keys[pred][j]<prev_cnt:
+							continue
 						innerClause= None
 						temp_sen2= deepcopy(kb.sentences[keys[pred][j]])
 
@@ -281,37 +252,14 @@ def resolution(kb1, alpha):
 						if outerClause and innerClause:
 							standardize_apart(temp_sen2)
 							temp_sen1= deepcopy(kb.sentences[keys[pred][i]])
-
-							#factor(temp_sen1)
-							#input()
-							#print("Temporary sentence: ")
-							#print(temp_sen2)
-							#print("Inner clause: ")
-							#print(innerClause)
-							#print("Outer Clause: ")
-							#print(outerClause)
-							#standardize(temp_sen1, temp_sen2)
 							subs = unify(outerClause,innerClause)
 							
 							if subs==None:
 								continue
-							print(temp_sen1)
-							print(temp_sen2)
-							print(subs)
+							#print(temp_sen1)
+							#print(temp_sen2)
+							#print(subs)
 							
-							'''
-							for clause in temp_sen1:
-								if clause.pred==pred:
-									temp_sen1.remove(clause)
-									break
-
-			
-							
-							for clause in temp_sen2:
-								if clause.pred==pred:
-									temp_sen2.remove(clause)
-									break
-							'''
 
 							temp_sen1.remove(outerClause)
 							temp_sen2.remove(innerClause)
@@ -321,17 +269,13 @@ def resolution(kb1, alpha):
 
 							for clause in clause_list:
 								for ind in range(len(clause.args)):
-									#Adde
+									
 									if not isVariable(clause.args[ind]):
 										continue
-									#EAdde
+									
 									if clause.args[ind] in subs:
 										clause.args[ind]= subs[clause.args[ind]]
-									'''
-									else:
-										notUnified=True
-										break
-									'''
+									
 
 									#Added sentences
 							
@@ -341,17 +285,12 @@ def resolution(kb1, alpha):
 								for ind in range(len(clause.args)):
 									if clause.args[ind].find("_1")!= -1:
 										clause.args[ind]=clause.args[ind].replace("_1","")
-										#print("New arg: ",arg)
-							#print("Temporary clause list: ")
-							print(clause_list)
+										
+							#print(clause_list)
 							clause_list=factor(clause_list)
-							print(clause_list)
-							print("********")
-							#input()
-							#factor(clause_list)
-							
-
-							
+							#print(clause_list)
+							#print("********")
+														
 							if clause_list in kb.sentences:
 								continue
 
@@ -361,31 +300,19 @@ def resolution(kb1, alpha):
 							if clause_list==[]:
 								#print(innerClause)
 								#print(outerClause)
-								print("Final answer")
-								kb.printSentences()
+								#print("Final answer")
+								#kb.printSentences()
 								#input()
-								print(len(kb.sentences))
-								#print(innerClause)
-								#print(outerClause)
-								#print()
+								#print(len(kb.sentences))
+								
 								return True
 							else:
-								
-								#print(kb.sentences[keys[pred][i]])
-								#print(kb.sentences[keys[pred][j]])
-								#print("Inner Clause", innerClause)
-								#print("Outer Clause", outerClause)
-								#print(subs)
-								#print(clause_list)
-								#print("****")
-								#input()
-								
-								#print("****")
 								newsentences.append(clause_list)
 
 		if newsentences==[]:
 			#print("FALSE")
-			kb.printSentences()
+			#kb.printSentences()
+			#input()
 			#print("*****")
 			#rint("******")
 			return False
@@ -393,6 +320,11 @@ def resolution(kb1, alpha):
 		else:
 			#print("New sentences: ")
 			kb_cnt=0
+			prev_cnt= len(kb.sentences)
+			end = time()
+			time_elapsed = end-start
+			if time_elapsed > 15:
+				return False
 			for sentence in newsentences:
 				isNew = True
 				for sen in kb.sentences:
@@ -404,18 +336,10 @@ def resolution(kb1, alpha):
 				
 			if kb_cnt==0:
 				return False
-			kb.printSentences()
-			print(len(kb.sentences))
-			input()
-			#print(len(set(kb.sentences)))
+			#kb.printSentences()
+			#print(len(kb.sentences))
 			#input()
-			#input()
-
-
-
-
-
-
+			
 if __name__=='__main__':
 
 	queries = []
@@ -423,7 +347,7 @@ if __name__=='__main__':
 	sentences=[]
 
 	f1 = open("output.txt", "w")
-	with open("inp1.txt") as f:
+	with open("wapp_3.txt") as f:
 		content = f.readlines()
 		#print(content)
 
@@ -442,7 +366,7 @@ if __name__=='__main__':
 			sentences.append(sen)
 	#print(queries)
 	#print(sentences)
-	start = time.time();
+	#start = time.time();
 	kb = KB()
 	for i in sentences:
 		comp_string = parse(i)
@@ -471,6 +395,8 @@ if __name__=='__main__':
 				else:
 					args.append(j)
 		clause_list= factor(clause_list)
+		#print(clause_list)
+		#input()
 		kb.add(clause_list)
 		#print(clause_list)
 	#kb.printSentences()
@@ -506,6 +432,7 @@ if __name__=='__main__':
 		#print(query_clause)
 		#kb.add(query_clause)
 		ans = resolution(kb,query_clause)
+		#print(ans)
 		if ans:
 			f1.write("TRUE\n")
 		else:
@@ -518,8 +445,8 @@ if __name__=='__main__':
 	#print(resolution(kb,None))
 	#kb.printSentences()
 	#print(kb.keyList)
-	end = time.time()
-	print(end-start)
+	#end = time.time()
+	#print(end-start)
 	f1.close()
 
 
