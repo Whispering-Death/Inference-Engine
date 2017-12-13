@@ -104,13 +104,9 @@ def unify(x,y):
 				return None
 			elif y.args[i] not in subs:
 				subs[y.args[i]]= x.args[i]
-			#print(subs)
+			
 
 		else:
-			'''
-			if x.args[i]!= y.args[i]:
-				return None
-			'''
 			
 			# Eg:- x and x1 : {x1: x}
 			if x.args[i] not in subs and y.args[i] not in subs:
@@ -185,26 +181,17 @@ def factor(sen):
 			subs= unify(clause1, clause2)
 			if subs!= None:
 				vis[j]=1
-				
-				for ind in range(len(clause2.args)):
-					
-					if not isVariable(clause2.args[ind]):
-						continue
-					
-					if clause2.args[ind] in subs:
-						clause2.args[ind]= subs[clause2.args[ind]]
 
-				for ind in range(len(clause1.args)):
-					
-					if not isVariable(clause1.args[ind]):
-						continue
-					
-					if clause1.args[ind] in subs:
-						clause1.args[ind]= subs[clause1.args[ind]]
+				for clause in sen:
+					for ind in range(len(clause.args)):
+						if not isVariable(clause.args[ind]):
+							continue
+						else:
+							if clause.args[ind] in subs:
+								clause.args[ind] = subs[clause.args[ind]]
 
 	sen=list(set(sen))
 	return sen
-
 
 
 
@@ -236,7 +223,7 @@ def resolution(kb1, alpha):
 					for j in range(i+1,arg_size):
 						end = time()
 						time_elapsed = end-start
-						if time_elapsed> 15:
+						if time_elapsed> 45:
 							return False
 						if keys[pred][i]< prev_cnt and keys[pred][j]<prev_cnt:
 							continue
@@ -287,7 +274,7 @@ def resolution(kb1, alpha):
 										clause.args[ind]=clause.args[ind].replace("_1","")
 										
 							#print(clause_list)
-							clause_list=factor(clause_list)
+							#clause_list=factor(clause_list)
 							#print(clause_list)
 							#print("********")
 														
@@ -298,6 +285,8 @@ def resolution(kb1, alpha):
 							
 							
 							if clause_list==[]:
+								#print(temp_sen1)
+								#print(temp_sen2)
 								#print(innerClause)
 								#print(outerClause)
 								#print("Final answer")
@@ -322,18 +311,25 @@ def resolution(kb1, alpha):
 			kb_cnt=0
 			prev_cnt= len(kb.sentences)
 			end = time()
+
 			time_elapsed = end-start
-			if time_elapsed > 15:
+			if time_elapsed > 45:
 				return False
+			cnt=0
 			for sentence in newsentences:
 				isNew = True
+				if time()-start > 45:
+
+					return False
 				for sen in kb.sentences:
 					if set(sentence)== set(sen):
+						cnt+=1
 						isNew= False
 				if isNew:
 					kb.add(sentence)
 					kb_cnt+=1
-				
+			
+			#print(cnt)
 			if kb_cnt==0:
 				return False
 			#kb.printSentences()
@@ -345,9 +341,9 @@ if __name__=='__main__':
 	queries = []
 
 	sentences=[]
-
+	start=time()
 	f1 = open("output.txt", "w")
-	with open("wapp_3.txt") as f:
+	with open("wapp_14.txt") as f:
 		content = f.readlines()
 		#print(content)
 
@@ -394,7 +390,7 @@ if __name__=='__main__':
 					pred=j
 				else:
 					args.append(j)
-		clause_list= factor(clause_list)
+		#clause_list= factor(clause_list)
 		#print(clause_list)
 		#input()
 		kb.add(clause_list)
@@ -445,9 +441,10 @@ if __name__=='__main__':
 	#print(resolution(kb,None))
 	#kb.printSentences()
 	#print(kb.keyList)
-	#end = time.time()
+	end = time()
 	#print(end-start)
 	f1.close()
+    
 
 
 
