@@ -3,9 +3,9 @@ from time import time
 class KB:
 	""" Knowledge Base representing a list of Clause
 
-		KB consists of:
+	KB consists of:
 		 - sentences (list of Clause): List of clauses
-         - keyList (dict of 'str':list): Dictionary with the key representing a predicate and value representing the list of int
+	     - keyList (dict of 'str':list): Dictionary with the key representing a predicate and value representing the list of int
 
 	"""
 
