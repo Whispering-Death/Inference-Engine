@@ -4,8 +4,8 @@ class KB:
 	""" Knowledge Base representing a list of Clause
 
 	KB consists of:
-		 - sentences (list of Clause): List of clauses
-	     - keyList (dict of 'str':list): Dictionary with the key representing a predicate and value representing the list of int
+		- sentences (list of Clause): List of clauses
+		- keyList (dict of 'str':list): Dictionary with the key representing a predicate and value representing the list of int
 
 	"""
 
