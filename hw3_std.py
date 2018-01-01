@@ -1,4 +1,3 @@
-
 from copy import deepcopy
 from time import time
 class KB:
@@ -77,10 +76,8 @@ def isVariable(x):
 def unify(x,y):
 
 	if x.pred!= y.pred:
-		#print("Predicates don't match")
 		return None
 	if len(x.args) != len(y.args):
-		#print("Argument lists are of different length")
 		return None
 
 	subs= {}
@@ -213,7 +210,6 @@ def resolution(kb1, alpha):
 			# generating combinations which can unify and can be added to the KB.
 			for i in range(arg_size-1):
 				outerClause=None
-				#factor(temp_sen1)
 				for clause1 in kb.sentences[keys[pred][i]]:
 					if clause1.pred==pred:
 						outerClause= clause1
@@ -243,9 +239,6 @@ def resolution(kb1, alpha):
 							
 							if subs==None:
 								continue
-							#print(temp_sen1)
-							#print(temp_sen2)
-							#print(subs)
 							
 
 							temp_sen1.remove(outerClause)
@@ -263,20 +256,12 @@ def resolution(kb1, alpha):
 									if clause.args[ind] in subs:
 										clause.args[ind]= subs[clause.args[ind]]
 									
-
-									#Added sentences
 							
-							#print("Clauses: ")
 							for clause in clause_list:
-								#print("Arguments: ")
 								for ind in range(len(clause.args)):
 									if clause.args[ind].find("_1")!= -1:
 										clause.args[ind]=clause.args[ind].replace("_1","")
-										
-							#print(clause_list)
-							#clause_list=factor(clause_list)
-							#print(clause_list)
-							#print("********")
+							clause_list=factor(clause_list)
 														
 							if clause_list in kb.sentences:
 								continue
@@ -285,29 +270,16 @@ def resolution(kb1, alpha):
 							
 							
 							if clause_list==[]:
-								#print(temp_sen1)
-								#print(temp_sen2)
-								#print(innerClause)
-								#print(outerClause)
-								#print("Final answer")
-								#kb.printSentences()
-								#input()
-								#print(len(kb.sentences))
 								
 								return True
 							else:
 								newsentences.append(clause_list)
 
 		if newsentences==[]:
-			#print("FALSE")
-			#kb.printSentences()
-			#input()
-			#print("*****")
-			#rint("******")
 			return False
 
 		else:
-			#print("New sentences: ")
+			
 			kb_cnt=0
 			prev_cnt= len(kb.sentences)
 			end = time()
@@ -329,12 +301,10 @@ def resolution(kb1, alpha):
 					kb.add(sentence)
 					kb_cnt+=1
 			
-			#print(cnt)
+			
 			if kb_cnt==0:
 				return False
-			#kb.printSentences()
-			#print(len(kb.sentences))
-			#input()
+			
 			
 if __name__=='__main__':
 
@@ -343,13 +313,9 @@ if __name__=='__main__':
 	sentences=[]
 	start=time()
 	f1 = open("output.txt", "w")
-	with open("wapp_14.txt") as f:
+	with open("inp39.txt") as f:
 		content = f.readlines()
-		#print(content)
-
 		n= content[0].strip()
-		#print(n)
-
 		for i in range(int(n)):
 			q = content[i+1].strip()
 			queries.append(q)
@@ -360,9 +326,6 @@ if __name__=='__main__':
 		for i in range(int(n_sentences)):
 			sen= content[ind+i+1].strip()
 			sentences.append(sen)
-	#print(queries)
-	#print(sentences)
-	#start = time.time();
 	kb = KB()
 	for i in sentences:
 		comp_string = parse(i)
@@ -390,18 +353,10 @@ if __name__=='__main__':
 					pred=j
 				else:
 					args.append(j)
-		#clause_list= factor(clause_list)
-		#print(clause_list)
-		#input()
 		kb.add(clause_list)
-		#print(clause_list)
-	#kb.printSentences()
-	#kb.printList()
-
+		
 	for query in queries:
 		comp_query = parse(query)
-		#print(comp_query)
-
 		comp_query = comp_query.split()
 
 		pred=""
@@ -425,24 +380,12 @@ if __name__=='__main__':
 					pred=c
 				else:
 					args.append(c)
-		#print(query_clause)
-		#kb.add(query_clause)
 		ans = resolution(kb,query_clause)
-		#print(ans)
 		if ans:
 			f1.write("TRUE\n")
 		else:
-			f1.write("FALSE\n")
-
-		#f1.write(str(ans)+"\n")
-
-		#print(kb.sentences)
-		#input()
-	#print(resolution(kb,None))
-	#kb.printSentences()
-	#print(kb.keyList)
+			f1.write("FALSE\n")	
 	end = time()
-	#print(end-start)
 	f1.close()
     
 
@@ -457,5 +400,4 @@ if __name__=='__main__':
 
 
 	
-
 
